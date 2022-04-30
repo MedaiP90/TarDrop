@@ -77,8 +77,8 @@ let menuTemplate = [
 async function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: store.get("app_width") || 1366,
-    height: store.get("app_height") || 768,
+    width: store.get("app_width") || 1050,
+    height: store.get("app_height") || 760,
     title: appName,
     icon: path.join(__static, "icon.png"),
     webPreferences: {

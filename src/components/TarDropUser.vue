@@ -1,10 +1,10 @@
 <template>
-  <div class="pa-2" col hover>
+  <div v-on:click="emitClick" class="pa-2" title="Click to select" col hover>
     <v-avatar class="primary">
       <v-img src="../assets/logo.png" />
     </v-avatar>
-    <div class="body-1 font-weight-bold mt-1">{{ user.name }}</div>
-    <div class="caption grey--text">{{ user.address }}</div>
+    <div class="body-1 font-weight-bold mt-1">{{ host.name }}</div>
+    <div class="caption grey--text">{{ host.address }}</div>
   </div>
 </template>
 
@@ -24,6 +24,10 @@ div[hover]:hover {
   border-radius: 1em;
   box-shadow: 0 0 1em 1px #24292b50;
 }
+
+div[hover]:active {
+  background-color: #24292b25;
+}
 </style>
 
 <script>
@@ -31,7 +35,13 @@ export default {
   name: "TarDropUser",
 
   props: {
-    user: { type: Object, required: true },
+    host: { type: Object, required: true },
+  },
+
+  methods: {
+    emitClick(event) {
+      this.$emit("click", event);
+    },
   },
 };
 </script>

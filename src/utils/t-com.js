@@ -1,5 +1,6 @@
 import NetcatServer from "netcat/server";
 import NetcatClient from "netcat/client";
+import ip from "ip";
 import { Host } from "@/models/host";
 import { Constants } from "./constants";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/models/packets";
 
 class TarCommunicator {
+  #myIp = ip.address();
   #myPort = undefined;
   #myName = undefined;
 
@@ -32,8 +34,6 @@ class TarCommunicator {
 
     this.#server = new NetcatServer();
     this.#client = new NetcatClient();
-
-    this.#init();
   }
 
   // Methods
@@ -46,6 +46,11 @@ class TarCommunicator {
     if (event in this.#events) {
       this.#events[event] = this.#events[event].filter((l) => l !== listener);
     }
+  }
+
+  start() {
+    this.#initClient();
+    this.#initServer();
   }
 
   dispose() {
@@ -65,6 +70,22 @@ class TarCommunicator {
     if (this.#client) {
       this.#client.close();
       this.#client = undefined;
+    }
+  }
+
+  sendHi() {
+    const splitted = this.#myIp.split(".");
+    const subnet = `${splitted[0]}.${splitted[1]}.${splitted[2]}.`;
+
+    for (let last = 1; last < 255; last++) {
+      const hostToProbe = `${subnet}${last}`;
+
+      if (process.env.NODE_ENV !== "production" || hostToProbe !== this.#myIp) {
+        this.#sendTo(
+          hostToProbe,
+          new HiPacket({ name: this.#myName, tPort: this.#myPort }).toJson()
+        );
+      }
     }
   }
 
@@ -96,11 +117,6 @@ class TarCommunicator {
 
   // Private methods
 
-  #init() {
-    this.#initClient();
-    this.#initServer();
-  }
-
   #initClient() {
     this.#client.udp().port(Constants.APP_COM_PORT).init();
   }
@@ -115,8 +131,8 @@ class TarCommunicator {
         const packet = PacketFactory.Build(data.toString());
         const host = new Host(packet.name, address, packet.transferPort);
 
-        switch (typeof packet) {
-          case "HiPacket": {
+        switch (packet.constructor) {
+          case HiPacket: {
             if (this.#addHost(host)) {
               // It is actually a new host: emit it
               this.#emit("newHost", host);
@@ -133,7 +149,7 @@ class TarCommunicator {
 
             break;
           }
-          case "ByePacket": {
+          case ByePacket: {
             if (this.#removeHost(host)) {
               // The host was actually removed: emit it
               this.#emit("removedHost", host);
@@ -141,12 +157,12 @@ class TarCommunicator {
 
             break;
           }
-          case "TRequest": {
+          case TRequest: {
             // Emit the host
             this.#emit("tRequest", host);
             break;
           }
-          case "TReply": {
+          case TReply: {
             // Emit the host and its response
             this.#emit("tReply", { host, reply: packet.reply });
             break;
