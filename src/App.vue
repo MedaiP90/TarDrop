@@ -95,7 +95,7 @@
 
 <script>
 import { shell } from "electron";
-import Constants from "./utils/constants";
+import { Constants } from "./utils/constants";
 
 export default {
   name: "App",

@@ -5,7 +5,7 @@ import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
 import Store from "electron-store";
-import Constants from "./utils/constants";
+import { Constants } from "./utils/constants";
 import ip from "ip";
 import os from "os";
 
