@@ -84,6 +84,7 @@
 
         <v-btn
           v-bind:disabled="files.length === 0"
+          v-on:click="sendFilesRequest"
           class="grow-2"
           color="primary"
         >
@@ -91,6 +92,14 @@
         </v-btn>
       </div>
     </div>
+
+    <RequestDialog
+      v-bind:name="selected ? selected.name : undefined"
+      v-bind:files="files.length"
+      ref="requestDialog"
+    />
+
+    <AcceptDialog v-on:t-reply="transferReply" ref="acceptDialog" />
   </div>
 </template>
 
@@ -155,13 +164,16 @@ div[buttons] {
 
 <script>
 import TarDropUser from "../components/TarDropUser";
+import RequestDialog from "../components/RequestDialog";
+import AcceptDialog from "../components/AcceptDialog";
 import TarCommunicator from "../utils/t-com";
 import portfinder from "portfinder";
+import { FileChooser } from "../utils/file-chooser";
 
 export default {
   name: "HomeView",
 
-  components: { TarDropUser },
+  components: { TarDropUser, RequestDialog, AcceptDialog },
 
   data: () => ({
     $tCom: undefined,
@@ -187,6 +199,8 @@ export default {
     // Setup listeners
     this.$tCom.on("newHost", this.addHost);
     this.$tCom.on("removedHost", this.removeHost);
+    this.$tCom.on("tRequest", this.onTransferRequest);
+    this.$tCom.on("tReply", this.onTransferReply);
 
     this.$tCom.start();
 
@@ -200,11 +214,19 @@ export default {
     // Remove listeners
     this.$tCom.off("newHost", this.addHost);
     this.$tCom.off("removedHost", this.removeHost);
+    this.$tCom.off("tRequest", this.onTransferRequest);
+    this.$tCom.off("tReply", this.onTransferReply);
 
     this.$tCom.dispose();
   },
 
   methods: {
+    getRequestDialog() {
+      return this.$refs.requestDialog;
+    },
+    getAcceptDialog() {
+      return this.$refs.acceptDialog;
+    },
     selfAnnounce() {
       this.$tCom.sendHi();
     },
@@ -218,28 +240,45 @@ export default {
       this.selected = host;
     },
     selectFiles() {
-      const fakeInput = document.createElement("input");
-
-      fakeInput.type = "file";
-      fakeInput.multiple = true;
-      fakeInput.onchange = () => {
-        for (
-          let fileIndex = 0;
-          fileIndex < fakeInput.files.length;
-          fileIndex++
-        ) {
-          const newFile = fakeInput.files[fileIndex].path;
+      FileChooser.open(true, false, (input) => {
+        for (let fileIndex = 0; fileIndex < input.files.length; fileIndex++) {
+          const newFile = input.files[fileIndex].path;
 
           if (this.files.includes(newFile)) continue;
 
           this.files.push(newFile);
         }
-      };
-
-      fakeInput.click();
+      });
     },
     removeFile(file) {
       this.files = this.files.filter((f) => f !== file);
+    },
+    sendFilesRequest() {
+      this.getRequestDialog().setLoading(true);
+      this.getRequestDialog().start();
+      this.$tCom.sendTransferRequest(this.selected.address, this.files.length);
+    },
+    transferReply({ host, response }) {
+      let callback = undefined;
+
+      if (response) {
+        callback = () => {
+          console.log(`TODO: Receiving from ${host.name}`);
+        };
+      }
+
+      this.$tCom.sendTransferReply(host.address, callback);
+    },
+    onTransferRequest({ host, files }) {
+      this.getAcceptDialog().setData(host, files);
+      this.getAcceptDialog().open();
+    },
+    onTransferReply({ host, reply }) {
+      this.getRequestDialog().setLoading(false);
+
+      if (!reply) return this.getRequestDialog().stop();
+
+      console.log(`TODO: Sending to ${host.name}`);
     },
   },
 };
