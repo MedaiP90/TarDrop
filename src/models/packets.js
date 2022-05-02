@@ -3,6 +3,7 @@ const types = {
   T_REQUEST: 1,
   T_REPLY: 2,
   BYE: 3,
+  FIN: 4,
 };
 
 class BasePacket {

@@ -26,6 +26,7 @@ class TarCommunicator {
     removedHost: [],
     tRequest: [],
     tReply: [],
+    fin: [],
   };
 
   constructor(name, port) {

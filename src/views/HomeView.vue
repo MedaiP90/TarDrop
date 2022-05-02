@@ -281,7 +281,12 @@ export default {
           this.getRequestDialog(RECEIVE).setInfo({ name: host.name, files });
           this.getRequestDialog(RECEIVE).start();
 
-          this.$transfer.receiveFrom(this.$tCom.info.port, this.myDownload);
+          this.$transfer.receiveFrom(
+            this.$tCom.info.port,
+            host,
+            this.myDownload,
+            this.uncompressData
+          );
         };
       }
 

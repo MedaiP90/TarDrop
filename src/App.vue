@@ -36,18 +36,28 @@
       </v-btn>
     </v-footer>
 
-    <v-dialog v-model="settings" width="min(60ch, 90%)" scrollable>
+    <v-dialog v-model="settings" width="min(70ch, 90%)" scrollable>
       <v-card v-if="settings">
         <v-card-title>Settings</v-card-title>
 
         <v-card-text>
           <v-text-field v-model="tmpName" label="User name" clearable />
 
-          <v-text-field
-            v-model="tmpDownload"
-            label="Download folder"
-            clearable
-          />
+          <div class="d-flex" style="gap: 2em">
+            <v-text-field
+              v-model="tmpDownload"
+              label="Download folder"
+              clearable
+              hide-details
+            />
+
+            <v-switch
+              v-model="tmpUncompress"
+              label="Uncompress data"
+              hide-details
+              inset
+            />
+          </div>
         </v-card-text>
 
         <v-card-actions>
@@ -108,6 +118,7 @@ export default {
     // Temp values for settings
     tmpName: undefined,
     tmpDownload: undefined,
+    tmpUncompress: true,
   }),
 
   computed: {
@@ -127,6 +138,10 @@ export default {
         Constants.STORE_APP_DOWNLOAD,
         this.myHome
       );
+      this.tmpUncompress = this.getFromStore(
+        Constants.STORE_APP_UNCOMPRESS,
+        true
+      );
 
       this.settings = true;
     },
@@ -134,6 +149,7 @@ export default {
       // Save preferences
       this.saveInStore(Constants.STORE_APP_NAME, this.tmpName);
       this.saveInStore(Constants.STORE_APP_DOWNLOAD, this.tmpDownload);
+      this.saveInStore(Constants.STORE_APP_UNCOMPRESS, this.tmpUncompress);
 
       this.settings = false;
       location.reload();

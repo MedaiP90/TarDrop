@@ -22,6 +22,7 @@ Vue.mixin({
     myHome: os.homedir(),
     myName: storage.get(Constants.STORE_APP_NAME) || ip.address(),
     myDownload: storage.get(Constants.STORE_APP_DOWNLOAD) || os.homedir(),
+    uncompressData: storage.get(Constants.STORE_APP_UNCOMPRESS) ?? true,
   }),
 
   methods: {

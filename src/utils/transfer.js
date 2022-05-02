@@ -16,37 +16,34 @@ class Transfer {
     }
   }
 
-  receiveFrom(myPort, toFolder) {
-    exec(
-      `nc -l -p ${myPort} | tar -C ${toFolder} -xvz`,
-      (err, stdout, stderr) => {
-        this.#emit("receiveDone");
+  receiveFrom(myPort, host, toFolder, uncompressData = true) {
+    const tmp = `${toFolder}/${host.name}-${new Date().getTime()}.tar.gz`;
+    let tar = `> ${tmp}`;
 
-        if (err) {
-          console.error(`exec error: ${err}`);
-          return;
-        }
+    if (uncompressData) {
+      tar = `| tar -C ${toFolder} -xz`;
+    }
 
-        console.log(`stdout: ${stdout}`);
-        console.log(`stderr: ${stderr}`);
-      }
-    );
+    const command = exec(`nc -l -p ${myPort} ${tar}`);
+
+    command.stdout.on("data", (data) => {
+      console.info(`stdout: ${data}`);
+    });
+    command.stderr.on("data", (error) => {
+      console.info(`stderr: ${error}`);
+    });
+    command.on("close", () => {
+      this.#emit("receiveDone");
+    });
   }
 
   sendTo(host, files) {
     exec(
       // eslint-disable-next-line prettier/prettier
-      `tar -cvzf - ${files.join(" ")} | nc ${host.address} ${host.transferPort}`,
-      (err, stdout, stderr) => {
-        this.#emit("sendDone");
-
-        if (err) {
-          console.error(`exec error: ${err}`);
-          return;
-        }
-
-        console.log(`stdout: ${stdout}`);
-        console.log(`stderr: ${stderr}`);
+      `tar --transform 's/.*\\///g' -czf - ${files.map((f) => `'${f}'`).join(" ")} | nc -c ${host.address} ${host.transferPort}`,
+      (error) => {
+        if (error) console.error("Sending error:", error);
+        this.#emit("sendDone", { error });
       }
     );
   }
