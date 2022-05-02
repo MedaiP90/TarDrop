@@ -1,5 +1,12 @@
 # TarDrop
 
+## Dependencies
+
+For the application to run correctly your Linux system must have the following commands available:
+
+- `tar`: for packages compression
+- `nc`: for data transfer
+
 ## Project setup
 
 ```bash
