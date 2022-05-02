@@ -89,8 +89,12 @@ class ByePacket extends BasePacket {
 }
 
 class TRequest extends BasePacket {
-  constructor({ name }) {
+  #files = undefined;
+
+  constructor({ name, files }) {
     super(types.T_REQUEST, name);
+
+    this.#files = files;
   }
 
   static fromString(jsonString = "{}") {
@@ -99,10 +103,18 @@ class TRequest extends BasePacket {
     return new TRequest(json);
   }
 
+  // Getters
+
+  get files() {
+    return this.#files;
+  }
+
   // Methods
 
   toJson() {
     const base = this._toJson();
+
+    base.files = this.#files;
 
     return JSON.stringify(base);
   }

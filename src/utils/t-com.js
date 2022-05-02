@@ -89,12 +89,15 @@ class TarCommunicator {
     }
   }
 
-  sendTransferRequest(address) {
+  sendTransferRequest(address, filesCount) {
     const hostIndex = this.#findHost(address);
 
     if (hostIndex < 0) return hostIndex;
 
-    this.#sendTo(address, new TRequest({ name: this.#myName }).toJson());
+    this.#sendTo(
+      address,
+      new TRequest({ name: this.#myName, files: filesCount }).toJson()
+    );
 
     return hostIndex;
   }
@@ -159,7 +162,7 @@ class TarCommunicator {
           }
           case TRequest: {
             // Emit the host
-            this.#emit("tRequest", host);
+            this.#emit("tRequest", { host, files: packet.files });
             break;
           }
           case TReply: {
