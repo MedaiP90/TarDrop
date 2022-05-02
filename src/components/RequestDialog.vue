@@ -20,8 +20,12 @@
         <span v-if="loading">
           Waiting for <strong>{{ name }}</strong> to accept {{ files }} files...
         </span>
-        <span v-else>
+        <span v-else-if="sending">
           Sending {{ files }} files to <strong>{{ name }}</strong>
+          ...
+        </span>
+        <span v-else>
+          Receiving {{ files }} files from <strong>{{ name }}</strong>
           ...
         </span>
 
@@ -77,14 +81,12 @@
 export default {
   name: "RequestDialog",
 
-  props: {
-    name: { type: String },
-    files: { type: Number },
-  },
-
   data: () => ({
     open: false,
     loading: true,
+    sending: true,
+    name: undefined,
+    files: undefined,
   }),
 
   methods: {
@@ -96,6 +98,13 @@ export default {
     },
     setLoading(loading) {
       this.loading = loading;
+    },
+    setSending(sending) {
+      this.sending = sending;
+    },
+    setInfo({ name, files }) {
+      this.name = name;
+      this.files = files;
     },
   },
 };

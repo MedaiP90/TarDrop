@@ -93,11 +93,9 @@
       </div>
     </div>
 
-    <RequestDialog
-      v-bind:name="selected ? selected.name : undefined"
-      v-bind:files="files.length"
-      ref="requestDialog"
-    />
+    <RequestDialog ref="requestDialog-send" />
+
+    <RequestDialog ref="requestDialog-receive" />
 
     <AcceptDialog v-on:t-reply="transferReply" ref="acceptDialog" />
   </div>
@@ -167,8 +165,12 @@ import TarDropUser from "../components/TarDropUser";
 import RequestDialog from "../components/RequestDialog";
 import AcceptDialog from "../components/AcceptDialog";
 import TarCommunicator from "../utils/t-com";
+import Transfer from "../utils/transfer";
 import portfinder from "portfinder";
 import { FileChooser } from "../utils/file-chooser";
+
+const SEND = "send";
+const RECEIVE = "receive";
 
 export default {
   name: "HomeView",
@@ -177,6 +179,7 @@ export default {
 
   data: () => ({
     $tCom: undefined,
+    $transfer: undefined,
     hosts: [],
     files: [],
     selected: undefined,
@@ -195,12 +198,15 @@ export default {
     const tPort = await portfinder.getPortPromise();
 
     this.$tCom = new TarCommunicator(this.myName, tPort);
+    this.$transfer = new Transfer();
 
     // Setup listeners
     this.$tCom.on("newHost", this.addHost);
     this.$tCom.on("removedHost", this.removeHost);
     this.$tCom.on("tRequest", this.onTransferRequest);
     this.$tCom.on("tReply", this.onTransferReply);
+    this.$transfer.on("sendDone", this.sendDone);
+    this.$transfer.on("receiveDone", this.receiveDone);
 
     this.$tCom.start();
 
@@ -216,13 +222,15 @@ export default {
     this.$tCom.off("removedHost", this.removeHost);
     this.$tCom.off("tRequest", this.onTransferRequest);
     this.$tCom.off("tReply", this.onTransferReply);
+    this.$transfer.off("sendDone", this.sendDone);
+    this.$transfer.off("receiveDone", this.receiveDone);
 
     this.$tCom.dispose();
   },
 
   methods: {
-    getRequestDialog() {
-      return this.$refs.requestDialog;
+    getRequestDialog(type) {
+      return this.$refs[`requestDialog-${type}`];
     },
     getAcceptDialog() {
       return this.$refs.acceptDialog;
@@ -254,16 +262,26 @@ export default {
       this.files = this.files.filter((f) => f !== file);
     },
     sendFilesRequest() {
-      this.getRequestDialog().setLoading(true);
-      this.getRequestDialog().start();
+      this.getRequestDialog(SEND).setLoading(true);
+      this.getRequestDialog(SEND).setSending(true);
+      this.getRequestDialog(SEND).setInfo({
+        name: this.selected?.name,
+        files: this.files.length,
+      });
+      this.getRequestDialog(SEND).start();
       this.$tCom.sendTransferRequest(this.selected.address, this.files.length);
     },
-    transferReply({ host, response }) {
+    transferReply({ host, response, files }) {
       let callback = undefined;
 
       if (response) {
         callback = () => {
-          console.log(`TODO: Receiving from ${host.name}`);
+          this.getRequestDialog(RECEIVE).setLoading(false);
+          this.getRequestDialog(RECEIVE).setSending(false);
+          this.getRequestDialog(RECEIVE).setInfo({ name: host.name, files });
+          this.getRequestDialog(RECEIVE).start();
+
+          this.$transfer.receiveFrom(this.$tCom.info.port, this.myDownload);
         };
       }
 
@@ -274,11 +292,17 @@ export default {
       this.getAcceptDialog().open();
     },
     onTransferReply({ host, reply }) {
-      this.getRequestDialog().setLoading(false);
+      this.getRequestDialog(SEND).setLoading(false);
 
-      if (!reply) return this.getRequestDialog().stop();
+      if (!reply) return this.getRequestDialog(SEND).stop();
 
-      console.log(`TODO: Sending to ${host.name}`);
+      this.$transfer.sendTo(host, this.files);
+    },
+    sendDone() {
+      this.getRequestDialog(SEND).stop();
+    },
+    receiveDone() {
+      this.getRequestDialog(RECEIVE).stop();
     },
   },
 };

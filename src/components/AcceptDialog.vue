@@ -40,7 +40,11 @@ export default {
       this.filesCount = count;
     },
     respond(response) {
-      this.$emit("t-reply", { host: this.host, response });
+      this.$emit("t-reply", {
+        host: this.host,
+        files: this.filesCount,
+        response,
+      });
       this.acceptDialog = false;
     },
   },

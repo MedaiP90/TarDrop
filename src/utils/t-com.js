@@ -36,6 +36,12 @@ class TarCommunicator {
     this.#client = new NetcatClient();
   }
 
+  // Getters
+
+  get info() {
+    return { ip: this.#myIp, port: this.#myPort, name: this.#myName };
+  }
+
   // Methods
 
   on(event, listener) {
@@ -167,7 +173,10 @@ class TarCommunicator {
           }
           case TReply: {
             // Emit the host and its response
-            this.#emit("tReply", { host, reply: packet.reply });
+            this.#emit("tReply", {
+              host: this.#hostList[this.#findHost(host.address)],
+              reply: packet.reply,
+            });
             break;
           }
           default:
