@@ -5,6 +5,7 @@ class Transfer {
 
   #events = {
     receiveDone: [],
+    receiveError: [],
     sendDone: [],
   };
 
@@ -33,10 +34,11 @@ class Transfer {
     const command = exec(`${this.#nc} -l -p ${myPort} ${tar}`);
 
     command.stdout.on("data", (data) => {
-      console.info(`stdout: ${data}`);
+      console.log(`stdout: ${data}`);
     });
     command.stderr.on("data", (error) => {
-      console.info(`stderr: ${error}`);
+      console.error(`stderr: ${error}`);
+      this.#emit("receiveError", { error });
     });
     command.on("close", () => {
       this.#emit("receiveDone");

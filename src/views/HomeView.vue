@@ -46,7 +46,7 @@
           title="Add files"
           fab
         >
-          <v-icon>mdi-plus</v-icon>
+          <v-icon x-large>mdi-plus</v-icon>
         </v-btn>
 
         <div v-else class="chooser-list">
@@ -194,6 +194,7 @@ export default {
     hosts: [],
     files: [],
     selected: undefined,
+    hasErrors: false,
   }),
 
   watch: {
@@ -218,6 +219,7 @@ export default {
     this.$tCom.on("tReply", this.onTransferReply);
     this.$transfer.on("sendDone", this.sendDone);
     this.$transfer.on("receiveDone", this.receiveDone);
+    this.$transfer.on("receiveError", this.receiveError);
 
     this.$tCom.start();
 
@@ -235,6 +237,7 @@ export default {
     this.$tCom.off("tReply", this.onTransferReply);
     this.$transfer.off("sendDone", this.sendDone);
     this.$transfer.off("receiveDone", this.receiveDone);
+    this.$transfer.off("receiveError", this.receiveError);
 
     this.$tCom.dispose();
   },
@@ -314,11 +317,29 @@ export default {
 
       this.$transfer.sendTo(host, this.files, this.flattenStructure);
     },
-    sendDone() {
+    sendDone({ error }) {
       this.getRequestDialog(SEND).stop();
+
+      if (error) {
+        this.$bus.$emit("error", `Transfer completed with error: ${error}`);
+      } else {
+        this.$bus.$emit("message", "Transfer completed successfully");
+      }
     },
     receiveDone() {
       this.getRequestDialog(RECEIVE).stop();
+
+      if (!this.hasErrors) {
+        this.$bus.$emit("message", "Transfer completed successfully");
+      } else {
+        this.$bus.$emit("error", "Transfer completed with errors");
+      }
+
+      this.hasErrors = false;
+    },
+    receiveError({ error }) {
+      this.hasErrors = true;
+      this.$bus.$emit("error", `Error: ${error}`);
     },
   },
 };

@@ -36,6 +36,8 @@
       </v-btn>
     </v-footer>
 
+    <MessageToast ref="messages" />
+
     <v-dialog v-model="settings" width="min(70ch, 90%)" scrollable>
       <v-card v-if="settings">
         <v-card-title>Settings</v-card-title>
@@ -124,9 +126,12 @@
 <script>
 import { shell } from "electron";
 import { Constants } from "./utils/constants";
+import MessageToast from "./components/MessageToast";
 
 export default {
   name: "App",
+
+  components: { MessageToast },
 
   data: () => ({
     version: process.env.VUE_APP_VERSION,
@@ -150,9 +155,32 @@ export default {
   beforeMount() {
     // Remove global scrollbar
     document.getElementsByTagName("html")[0].style.overflow = "hidden";
+
+    this.$bus.$on("error", this.displayError);
+    this.$bus.$on("message", this.displayMessage);
+  },
+
+  beforeDestroy() {
+    this.$bus.$off("error", this.displayError);
+    this.$bus.$off("message", this.displayMessage);
   },
 
   methods: {
+    getToast() {
+      return this.$refs.messages;
+    },
+    displayError(error) {
+      this.getToast().setOpen(false);
+      this.getToast().setMessage(error);
+      this.getToast().setError(true);
+      this.getToast().setOpen(true);
+    },
+    displayMessage(message) {
+      this.getToast().setOpen(false);
+      this.getToast().setMessage(message);
+      this.getToast().setError(false);
+      this.getToast().setOpen(true);
+    },
     openSettings() {
       // Load preferences
       this.tmpName = this.getFromStore(

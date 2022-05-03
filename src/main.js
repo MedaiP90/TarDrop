@@ -17,6 +17,7 @@ const defaultHome = `${os.homedir()}/${Constants.BASE_DIR}`;
 document.title = "TarDrop";
 
 Vue.config.productionTip = false;
+Vue.prototype.$bus = new Vue();
 
 // Create default download folder
 if (!fs.existsSync(defaultHome)) fs.mkdirSync(defaultHome);
