@@ -1,10 +1,32 @@
 <template>
-  <div v-on:click="emitClick" class="pa-2" title="Click to select" col hover>
-    <v-avatar class="primary pulsing">
+  <div
+    v-bind:title="
+      host !== undefined
+        ? 'Click to select'
+        : 'Waiting for other hosts to be online'
+    "
+    v-on:click="emitClick"
+    class="pa-2"
+    col
+    hover
+  >
+    <v-avatar
+      v-bind:class="{
+        primary: true,
+        pulsing: host !== undefined,
+        stabilizing: host === undefined,
+      }"
+    >
       <v-img src="../assets/logo.png" />
     </v-avatar>
-    <div class="body-1 font-weight-bold mt-1">{{ host.name }}</div>
-    <div class="caption grey--text">{{ host.address }}</div>
+    <template v-if="host !== undefined">
+      <div class="body-1 font-weight-bold mt-1">{{ host.name }}</div>
+      <div class="caption grey--text">{{ host.address }}</div>
+    </template>
+    <template v-else>
+      <div class="body-1 font-weight-bold mt-1">...</div>
+      <div class="caption grey--text">Waiting</div>
+    </template>
   </div>
 </template>
 
@@ -29,8 +51,24 @@ div[hover]:active {
   background-color: #24292b25;
 }
 
+.stabilizing {
+  animation: stabilize 2s infinite;
+}
+
 .pulsing {
   animation: pulse 2s infinite;
+}
+
+@keyframes stabilize {
+  0% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes pulse {
@@ -51,7 +89,7 @@ export default {
   name: "TarDropUser",
 
   props: {
-    host: { type: Object, required: true },
+    host: { type: Object, required: false },
   },
 
   methods: {

@@ -1,21 +1,28 @@
 <template>
   <div container>
-    <div class="pa-4 y-scrollable" row>
-      <TarDropUser
-        v-for="(host, i) in hosts"
-        v-bind:key="host.address + '-' + i"
-        v-bind:host="host"
-        v-on:click="selectHost(host)"
-      />
+    <div class="pa-4 y-scrollable" row shadow>
+      <template v-if="hosts.length > 0">
+        <TarDropUser
+          v-for="(host, i) in hosts"
+          v-bind:key="host.address + '-' + i"
+          v-bind:host="host"
+          v-on:click="selectHost(host)"
+        />
+      </template>
+      <template v-else>
+        <TarDropUser />
+      </template>
     </div>
 
-    <div v-if="selected !== undefined" class="my-4 px-4" grid>
+    <div class="my-4 px-4" grid>
       <h1 class="d-flex flex-row justify-space-between align-center">
-        <span>
+        <span v-if="selected !== undefined">
           Send files to <strong>{{ selected.name }}</strong>
         </span>
+        <span v-else>Select a receiver from above</span>
 
         <v-btn
+          v-if="selected !== undefined"
           v-bind:title="'Close ' + selected.name"
           v-on:click="selected = undefined"
           color="error"
@@ -83,7 +90,7 @@
         </v-btn>
 
         <v-btn
-          v-bind:disabled="files.length === 0"
+          v-bind:disabled="selected === undefined || files.length === 0"
           v-on:click="sendFilesRequest"
           class="grow-2"
           color="primary"
@@ -113,6 +120,10 @@ div[row] {
   display: flex;
   flex-direction: row;
   gap: 1em;
+}
+
+div[shadow] {
+  box-shadow: 0 0 0.7em 0 #24292b50;
 }
 
 div[grid] {
