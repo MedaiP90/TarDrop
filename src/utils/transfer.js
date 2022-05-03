@@ -2,6 +2,7 @@ import { exec } from "child_process";
 
 class Transfer {
   #nc = undefined;
+  #ncClose = undefined;
 
   #events = {
     receiveDone: [],
@@ -9,8 +10,9 @@ class Transfer {
     sendDone: [],
   };
 
-  constructor(netcatCommand) {
+  constructor(netcatCommand, netcatClose) {
     this.#nc = netcatCommand;
+    this.#ncClose = netcatClose;
   }
 
   on(event, listener) {
@@ -54,7 +56,7 @@ class Transfer {
 
     exec(
       // eslint-disable-next-line prettier/prettier
-      `tar${transform} -czf - ${files.map((f) => `'${f}'`).join(" ")} | ${this.#nc} -c ${host.address} ${host.transferPort}`,
+      `tar${transform} -czf - ${files.map((f) => `'${f}'`).join(" ")} | ${this.#nc} ${this.#ncClose} ${host.address} ${host.transferPort}`,
       (error) => {
         if (error) console.error("Sending error:", error);
         this.#emit("sendDone", { error });

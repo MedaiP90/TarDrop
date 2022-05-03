@@ -210,7 +210,7 @@ export default {
     const tPort = await portfinder.getPortPromise();
 
     this.$tCom = new TarCommunicator(this.myName, tPort);
-    this.$transfer = new Transfer(this.netcatCommand);
+    this.$transfer = new Transfer(this.netcatCommand, this.netcatClose);
 
     this.$bus.$on("disconnect", this.disconnect);
     this.$bus.$on("connect", this.connect);

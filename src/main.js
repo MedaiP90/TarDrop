@@ -31,6 +31,7 @@ Vue.mixin({
     uncompressData: storage.get(Constants.STORE_APP_UNCOMPRESS) ?? true,
     flattenStructure: storage.get(Constants.STORE_APP_FLATTEN) ?? true,
     netcatCommand: storage.get(Constants.STORE_APP_NETCAT) || "nc",
+    netcatClose: storage.get(Constants.STORE_APP_NETCAT_C) || "-c",
   }),
 
   methods: {

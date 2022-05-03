@@ -1,6 +1,6 @@
 {
   "name": "tardrop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": false,
   "description": "Linux LAN file transfer using tar and NetCat.",
   "author": {

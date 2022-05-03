@@ -53,19 +53,25 @@
         <v-card-text>
           <v-text-field v-model="tmpName" label="User name" clearable />
 
-          <div class="d-flex" style="gap: 1.4em">
-            <v-text-field
-              v-model="tmpDownload"
-              label="Download folder"
-              style="flex-grow: 6"
-              clearable
-            />
+          <v-text-field
+            v-model="tmpDownload"
+            label="Download folder"
+            clearable
+          />
 
+          <div class="d-flex" style="gap: 1.4em">
             <v-text-field
               v-model="tmpNetcatCommand"
               label="Netcat command"
               style="flex-grow: 1"
               clearable
+            />
+
+            <v-select
+              v-model="tmpNetcatClose"
+              v-bind:items="closeOpts"
+              label="Netcat close parameter"
+              style="flex-grow: 0; width: 20ch"
             />
           </div>
 
@@ -146,6 +152,7 @@ export default {
     issues: process.env.VUE_APP_GITHUB_BUGS,
     settings: false,
     disconnected: false,
+    closeOpts: ["-c", "-N"],
 
     // Temp values for settings
     tmpName: undefined,
@@ -153,11 +160,17 @@ export default {
     tmpUncompress: true,
     tmpFlattenData: true,
     tmpNetcatCommand: undefined,
+    tmpNetcatClose: undefined,
   }),
 
   computed: {
     valid() {
-      return !!this.tmpName && !!this.tmpDownload && !!this.tmpNetcatCommand;
+      return (
+        !!this.tmpName &&
+        !!this.tmpDownload &&
+        !!this.tmpNetcatCommand &&
+        !!this.tmpNetcatClose
+      );
     },
   },
 
@@ -212,6 +225,10 @@ export default {
         Constants.STORE_APP_NETCAT,
         "nc"
       );
+      this.tmpNetcatClose = this.getFromStore(
+        Constants.STORE_APP_NETCAT_C,
+        "-c"
+      );
 
       this.settings = true;
     },
@@ -222,6 +239,7 @@ export default {
       this.saveInStore(Constants.STORE_APP_UNCOMPRESS, this.tmpUncompress);
       this.saveInStore(Constants.STORE_APP_FLATTEN, this.tmpFlattenData);
       this.saveInStore(Constants.STORE_APP_NETCAT, this.tmpNetcatCommand);
+      this.saveInStore(Constants.STORE_APP_NETCAT_C, this.tmpNetcatClose);
 
       this.settings = false;
       location.reload();
