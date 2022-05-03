@@ -43,12 +43,21 @@
         <v-card-text>
           <v-text-field v-model="tmpName" label="User name" clearable />
 
-          <v-text-field
-            v-model="tmpDownload"
-            label="Download folder"
-            clearable
-            hide-details
-          />
+          <div class="d-flex" style="gap: 1.4em">
+            <v-text-field
+              v-model="tmpDownload"
+              label="Download folder"
+              style="flex-grow: 6"
+              clearable
+            />
+
+            <v-text-field
+              v-model="tmpNetcatCommand"
+              label="Netcat command"
+              style="flex-grow: 1"
+              clearable
+            />
+          </div>
 
           <div class="d-flex justify-center align-baseline" style="gap: 2em">
             <v-switch
@@ -129,11 +138,12 @@ export default {
     tmpDownload: undefined,
     tmpUncompress: true,
     tmpFlattenData: true,
+    tmpNetcatCommand: undefined,
   }),
 
   computed: {
     valid() {
-      return !!this.tmpName && !!this.tmpDownload;
+      return !!this.tmpName && !!this.tmpDownload && !!this.tmpNetcatCommand;
     },
   },
 
@@ -156,6 +166,10 @@ export default {
         Constants.STORE_APP_FLATTEN,
         true
       );
+      this.tmpNetcatCommand = this.getFromStore(
+        Constants.STORE_APP_NETCAT,
+        "nc"
+      );
 
       this.settings = true;
     },
@@ -165,6 +179,7 @@ export default {
       this.saveInStore(Constants.STORE_APP_DOWNLOAD, this.tmpDownload);
       this.saveInStore(Constants.STORE_APP_UNCOMPRESS, this.tmpUncompress);
       this.saveInStore(Constants.STORE_APP_FLATTEN, this.tmpFlattenData);
+      this.saveInStore(Constants.STORE_APP_NETCAT, this.tmpNetcatCommand);
 
       this.settings = false;
       location.reload();

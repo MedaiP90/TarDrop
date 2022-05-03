@@ -209,7 +209,7 @@ export default {
     const tPort = await portfinder.getPortPromise();
 
     this.$tCom = new TarCommunicator(this.myName, tPort);
-    this.$transfer = new Transfer();
+    this.$transfer = new Transfer(this.netcatCommand);
 
     // Setup listeners
     this.$tCom.on("newHost", this.addHost);

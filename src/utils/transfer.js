@@ -1,10 +1,16 @@
 import { exec } from "child_process";
 
 class Transfer {
+  #nc = undefined;
+
   #events = {
     receiveDone: [],
     sendDone: [],
   };
+
+  constructor(netcatCommand) {
+    this.#nc = netcatCommand;
+  }
 
   on(event, listener) {
     this.#events[event]?.push(listener);
@@ -24,7 +30,7 @@ class Transfer {
       tar = `| tar -C ${toFolder} -xz`;
     }
 
-    const command = exec(`nc -l -p ${myPort} ${tar}`);
+    const command = exec(`${this.#nc} -l -p ${myPort} ${tar}`);
 
     command.stdout.on("data", (data) => {
       console.info(`stdout: ${data}`);
@@ -46,7 +52,7 @@ class Transfer {
 
     exec(
       // eslint-disable-next-line prettier/prettier
-      `tar${transform} -czf - ${files.map((f) => `'${f}'`).join(" ")} | nc -c ${host.address} ${host.transferPort}`,
+      `tar${transform} -czf - ${files.map((f) => `'${f}'`).join(" ")} | ${this.#nc} -c ${host.address} ${host.transferPort}`,
       (error) => {
         if (error) console.error("Sending error:", error);
         this.#emit("sendDone", { error });
