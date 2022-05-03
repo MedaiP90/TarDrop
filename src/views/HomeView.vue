@@ -212,6 +212,9 @@ export default {
     this.$tCom = new TarCommunicator(this.myName, tPort);
     this.$transfer = new Transfer(this.netcatCommand);
 
+    this.$bus.$on("disconnect", this.disconnect);
+    this.$bus.$on("connect", this.connect);
+
     // Setup listeners
     this.$tCom.on("newHost", this.addHost);
     this.$tCom.on("removedHost", this.removeHost);
@@ -221,15 +224,15 @@ export default {
     this.$transfer.on("receiveDone", this.receiveDone);
     this.$transfer.on("receiveError", this.receiveError);
 
-    this.$tCom.start();
-
-    // Give some time to go online
-    setTimeout(() => {
-      this.selfAnnounce();
-    }, 1000);
+    this.connect();
   },
 
   beforeDestroy() {
+    this.disconnect();
+
+    this.$bus.$off("disconnect", this.disconnect);
+    this.$bus.$off("connect", this.connect);
+
     // Remove listeners
     this.$tCom.off("newHost", this.addHost);
     this.$tCom.off("removedHost", this.removeHost);
@@ -238,19 +241,20 @@ export default {
     this.$transfer.off("sendDone", this.sendDone);
     this.$transfer.off("receiveDone", this.receiveDone);
     this.$transfer.off("receiveError", this.receiveError);
-
-    this.$tCom.dispose();
   },
 
   methods: {
+    connect() {
+      this.$tCom.start();
+    },
+    disconnect() {
+      this.$tCom.dispose();
+    },
     getRequestDialog(type) {
       return this.$refs[`requestDialog-${type}`];
     },
     getAcceptDialog() {
       return this.$refs.acceptDialog;
-    },
-    selfAnnounce() {
-      this.$tCom.sendHi();
     },
     addHost(host) {
       this.hosts.unshift(host);

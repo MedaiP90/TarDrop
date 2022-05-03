@@ -8,6 +8,7 @@ class Constants {
 
   // Miscellaneous data
   static APP_COM_PORT = 7000;
+  static APP_KEEPALIVE = 1000;
   static BASE_DIR = "TarDrop";
 }
 

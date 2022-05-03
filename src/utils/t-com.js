@@ -18,6 +18,8 @@ class TarCommunicator {
 
   #server = undefined;
   #client = undefined;
+  #keepAlive = undefined;
+  #clearGhosts = undefined;
 
   #hostList = [];
 
@@ -32,9 +34,6 @@ class TarCommunicator {
   constructor(name, port) {
     this.#myName = name;
     this.#myPort = port;
-
-    this.#server = new NetcatServer();
-    this.#client = new NetcatClient();
   }
 
   // Getters
@@ -56,11 +55,40 @@ class TarCommunicator {
   }
 
   start() {
+    this.#server = new NetcatServer();
+    this.#client = new NetcatClient();
+
     this.#initClient();
     this.#initServer();
+
+    // Announce itself to the network or update
+    // already established connections
+    this.#keepAlive = setInterval(() => {
+      this.sendHi();
+    }, Constants.APP_KEEPALIVE);
+    // Clear ghost hosts
+    this.#clearGhosts = setInterval(() => {
+      const now = new Date().getTime();
+
+      this.#hostList.forEach((host) => {
+        if (now - host.timestamp > Constants.APP_KEEPALIVE * 2) {
+          this.#onByePacket(host);
+        }
+      });
+    }, Constants.APP_KEEPALIVE * 2.1);
   }
 
   dispose() {
+    if (this.#keepAlive) {
+      clearInterval(this.#keepAlive);
+      this.#keepAlive = undefined;
+    }
+
+    if (this.#clearGhosts) {
+      clearInterval(this.#clearGhosts);
+      this.#clearGhosts = undefined;
+    }
+
     // Communicate to all known hosts that this node is leaving the network
     this.#hostList.forEach((host) => {
       this.#sendTo(
@@ -69,30 +97,41 @@ class TarCommunicator {
       );
     });
 
-    // Close all listeners
-    if (this.#server) {
-      this.#server.close();
-      this.#server = undefined;
-    }
-    if (this.#client) {
-      this.#client.close();
-      this.#client = undefined;
-    }
+    // Await for messages to be sent
+    // then close all listeners
+    setTimeout(() => {
+      if (this.#server) {
+        this.#server.close();
+        this.#server = undefined;
+      }
+      if (this.#client) {
+        this.#client.close();
+        this.#client = undefined;
+      }
+    }, 500 * this.#hostList.length);
   }
 
   sendHi() {
     const splitted = this.#myIp.split(".");
     const subnet = `${splitted[0]}.${splitted[1]}.${splitted[2]}.`;
 
-    for (let last = 1; last < 255; last++) {
-      const hostToProbe = `${subnet}${last}`;
-
+    const send = (hostToProbe) => {
       if (process.env.NODE_ENV !== "production" || hostToProbe !== this.#myIp) {
         this.#sendTo(
           hostToProbe,
           new HiPacket({ name: this.#myName, tPort: this.#myPort }).toJson()
         );
       }
+    };
+
+    if (this.#hostList.length === 0) {
+      for (let last = 1; last < 255; last++) {
+        send(`${subnet}${last}`);
+      }
+    } else {
+      this.#hostList.forEach((host) => {
+        send(host.address);
+      });
     }
   }
 
@@ -141,6 +180,8 @@ class TarCommunicator {
         const packet = PacketFactory.Build(data.toString());
         const host = new Host(packet.name, address, packet.transferPort);
 
+        host.timestamp = new Date().getTime();
+
         switch (packet.constructor) {
           case HiPacket: {
             if (this.#addHost(host)) {
@@ -160,10 +201,7 @@ class TarCommunicator {
             break;
           }
           case ByePacket: {
-            if (this.#removeHost(host)) {
-              // The host was actually removed: emit it
-              this.#emit("removedHost", host);
-            }
+            this.#onByePacket(host);
 
             break;
           }
@@ -194,28 +232,37 @@ class TarCommunicator {
     this.#client.send(data, host);
   }
 
+  #onByePacket(host) {
+    if (this.#removeHost(host)) {
+      // The host was actually removed: emit it
+      this.#emit("removedHost", host);
+    }
+  }
+
   #findHost(address) {
     return this.#hostList.findIndex((h) => h.address === address);
   }
 
   #addHost(newHost) {
-    const notExists = this.#findHost(newHost.address) < 0;
+    const host = this.#findHost(newHost.address);
 
-    if (notExists) {
+    if (host < 0) {
       this.#hostList.unshift(newHost);
-
-      return true;
+    } else {
+      this.#hostList[host].timestamp = newHost.timestamp;
     }
 
-    return false;
+    return host < 0;
   }
 
   #removeHost(host) {
-    const hostIndex = this.#findHost(host.address);
+    const hostFound = this.#findHost(host.address) >= 0;
 
-    this.#hostList.splice(hostIndex, 1);
+    if (hostFound) {
+      this.#hostList = this.#hostList.filter((h) => h.address !== host.address);
+    }
 
-    return hostIndex >= 0;
+    return hostFound;
   }
 }
 

@@ -2,6 +2,7 @@ class Host {
   #name = undefined;
   #address = undefined;
   #transferPort = undefined;
+  #timestamp = 0;
 
   constructor(name, address, tPort) {
     this.#name = name;
@@ -19,6 +20,15 @@ class Host {
   }
   get transferPort() {
     return this.#transferPort;
+  }
+  get timestamp() {
+    return this.#timestamp;
+  }
+
+  // Setters
+
+  set timestamp(timestamp) {
+    this.#timestamp = timestamp;
   }
 }
 

@@ -9,6 +9,14 @@
 
       <v-spacer />
 
+      <v-btn
+        v-bind:title="disconnected ? 'Connect' : 'Disconnect'"
+        v-on:click="disconnect"
+        icon
+      >
+        <v-icon>mdi-lan-{{ disconnected ? "connect" : "disconnect" }}</v-icon>
+      </v-btn>
+
       <v-btn v-on:click="openSettings" title="Settings" icon>
         <v-icon>mdi-cog-outline</v-icon>
       </v-btn>
@@ -137,6 +145,7 @@ export default {
     version: process.env.VUE_APP_VERSION,
     issues: process.env.VUE_APP_GITHUB_BUGS,
     settings: false,
+    disconnected: false,
 
     // Temp values for settings
     tmpName: undefined,
@@ -216,6 +225,15 @@ export default {
 
       this.settings = false;
       location.reload();
+    },
+    disconnect() {
+      if (this.disconnected) {
+        this.$bus.$emit("connect");
+        this.disconnected = false;
+      } else {
+        this.$bus.$emit("disconnect");
+        this.disconnected = true;
+      }
     },
     openBugsUrl() {
       shell.openExternal(this.issues);
