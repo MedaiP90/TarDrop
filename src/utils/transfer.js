@@ -37,10 +37,16 @@ class Transfer {
     });
   }
 
-  sendTo(host, files) {
+  sendTo(host, files, flatten) {
+    let transform = "";
+
+    if (flatten) {
+      transform = " --transform 's/.*\\///g'";
+    }
+
     exec(
       // eslint-disable-next-line prettier/prettier
-      `tar --transform 's/.*\\///g' -czf - ${files.map((f) => `'${f}'`).join(" ")} | nc -c ${host.address} ${host.transferPort}`,
+      `tar${transform} -czf - ${files.map((f) => `'${f}'`).join(" ")} | nc -c ${host.address} ${host.transferPort}`,
       (error) => {
         if (error) console.error("Sending error:", error);
         this.#emit("sendDone", { error });

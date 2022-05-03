@@ -43,17 +43,26 @@
         <v-card-text>
           <v-text-field v-model="tmpName" label="User name" clearable />
 
-          <div class="d-flex" style="gap: 2em">
-            <v-text-field
-              v-model="tmpDownload"
-              label="Download folder"
-              clearable
+          <v-text-field
+            v-model="tmpDownload"
+            label="Download folder"
+            clearable
+            hide-details
+          />
+
+          <div class="d-flex justify-center align-baseline" style="gap: 2em">
+            <v-switch
+              v-model="tmpUncompress"
+              label="Uncompress received data"
+              title="Uncompress from tar the received files"
               hide-details
+              inset
             />
 
             <v-switch
-              v-model="tmpUncompress"
-              label="Uncompress data"
+              v-model="tmpFlattenData"
+              label="Flatten folder structure"
+              title="Do not send the folder structure of selected files"
               hide-details
               inset
             />
@@ -119,6 +128,7 @@ export default {
     tmpName: undefined,
     tmpDownload: undefined,
     tmpUncompress: true,
+    tmpFlattenData: true,
   }),
 
   computed: {
@@ -142,6 +152,10 @@ export default {
         Constants.STORE_APP_UNCOMPRESS,
         true
       );
+      this.tmpFlattenData = this.getFromStore(
+        Constants.STORE_APP_FLATTEN,
+        true
+      );
 
       this.settings = true;
     },
@@ -150,6 +164,7 @@ export default {
       this.saveInStore(Constants.STORE_APP_NAME, this.tmpName);
       this.saveInStore(Constants.STORE_APP_DOWNLOAD, this.tmpDownload);
       this.saveInStore(Constants.STORE_APP_UNCOMPRESS, this.tmpUncompress);
+      this.saveInStore(Constants.STORE_APP_FLATTEN, this.tmpFlattenData);
 
       this.settings = false;
       location.reload();

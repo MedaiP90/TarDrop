@@ -312,7 +312,7 @@ export default {
 
       if (!reply) return this.getRequestDialog(SEND).stop();
 
-      this.$transfer.sendTo(host, this.files);
+      this.$transfer.sendTo(host, this.files, this.flattenStructure);
     },
     sendDone() {
       this.getRequestDialog(SEND).stop();
