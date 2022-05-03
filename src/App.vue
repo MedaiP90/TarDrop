@@ -147,6 +147,11 @@ export default {
     },
   },
 
+  beforeMount() {
+    // Remove global scrollbar
+    document.getElementsByTagName("html")[0].style.overflow = "hidden";
+  },
+
   methods: {
     openSettings() {
       // Load preferences
