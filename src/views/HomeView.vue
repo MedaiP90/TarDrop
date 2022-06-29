@@ -179,6 +179,7 @@ import TarCommunicator from "../utils/t-com";
 import Transfer from "../utils/transfer";
 import portfinder from "portfinder";
 import { FileChooser } from "../utils/file-chooser";
+import { shell } from "electron";
 
 const SEND = "send";
 const RECEIVE = "receive";
@@ -335,6 +336,7 @@ export default {
 
       if (!this.hasErrors) {
         this.$bus.$emit("message", "Transfer completed successfully");
+        shell.openPath(this.myDownload);
       } else {
         this.$bus.$emit("error", "Transfer completed with errors");
       }

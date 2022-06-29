@@ -53,11 +53,23 @@
         <v-card-text>
           <v-text-field v-model="tmpName" label="User name" clearable />
 
-          <v-text-field
-            v-model="tmpDownload"
-            label="Download folder"
-            clearable
-          />
+          <div class="d-flex" style="gap: 1.4em">
+            <v-text-field
+              v-model="tmpDownload"
+              label="Download folder"
+              clearable
+            />
+
+            <v-btn
+              v-bind:title="'Open ' + tmpDownload"
+              v-on:click="openFolder"
+              color="primary"
+              fab
+              icon
+            >
+              <v-icon>mdi-folder-outline</v-icon>
+            </v-btn>
+          </div>
 
           <div class="d-flex" style="gap: 1.4em">
             <v-text-field
@@ -255,6 +267,9 @@ export default {
     },
     openBugsUrl() {
       shell.openExternal(this.issues);
+    },
+    openFolder() {
+      shell.openPath(this.tmpDownload);
     },
   },
 };
